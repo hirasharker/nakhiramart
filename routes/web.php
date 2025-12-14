@@ -6,7 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::resource('/', HomeController::class)->only(['index']);
 
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>@yield('title', 'TechStore - Premium Electronics')</title>
+  <title>{{ config('app.name') }} - @yield('title', 'Premium Electronics')</title>
 
   <!-- Tailwind (kept same as your original file) -->
   <script src="https://cdn.tailwindcss.com"></script>

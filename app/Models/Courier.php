@@ -6,22 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('couriers', function (Blueprint $table) {
             $table->id();
+            $table->string('name', 200);
+            $table->string('contact', 255)->nullable();
+            $table->string('service_level', 100)->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('couriers');
     }
 };

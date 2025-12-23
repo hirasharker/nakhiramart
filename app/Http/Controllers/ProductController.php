@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -13,33 +14,39 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'primaryImage'])
-            ->active()
-            ->inStock();
-
-        // Filter by category
+        $query = Product::with(['category'])->where('is_active', true);
+        
+        // Search
+        if ($request->has('search') && $request->search) {
+            $query->search($request->search);
+        }
+        
+        // Category filter
         if ($request->has('category') && $request->category) {
             $query->byCategory($request->category);
         }
-
-        // Search
-        if ($request->has('search') && $request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('sku', 'like', '%' . $request->search . '%');
-            });
-        }
-
+        
         // Sort
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'price_low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+        
         $products = $query->paginate(12);
-        $categories = Category::withCount('products')->get();
-
-        return view('products.index', compact('products', 'categories'));
+        
+        return view('products.index', compact('products'));
     }
 
     /**
@@ -47,19 +54,24 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::with(['category', 'images', 'variants'])
-            ->findOrFail($id);
-
-        // Get related products from same category
-        $relatedProducts = Product::with('primaryImage')
-            ->where('category_id', $product->category_id)
+        $product = Product::with(['category', 'images'])->findOrFail($id);
+        
+        // Get cart to check if product is already in it
+        $cart = $this->getCart();
+        $cartItem = $cart->items()->where('product_id', $id)->first();
+        
+        // Get quantity in cart (0 if not in cart)
+        $quantityInCart = $cartItem ? $cartItem->quantity : 0;
+        
+        // Get related products (same category)
+        $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
-            ->active()
+            ->where('is_active', true)
             ->inStock()
             ->limit(4)
             ->get();
-
-        return view('products.show', compact('product', 'relatedProducts'));
+        
+        return view('products.show', compact('product', 'relatedProducts', 'quantityInCart'));
     }
 
     /**
@@ -148,4 +160,25 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully');
     }
+
+
+    /**
+     * Get or create cart for current user/session
+     */
+    protected function getCart()
+    {
+        if (auth()->check()) {
+            return Cart::firstOrCreate(
+                ['user_id' => auth()->id()],
+                ['session_id' => session()->getId()]
+            );
+        }
+
+        return Cart::firstOrCreate(
+            ['session_id' => session()->getId()],
+            ['user_id' => null]
+        );
+    }
+
+    
 }

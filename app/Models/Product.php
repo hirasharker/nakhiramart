@@ -55,11 +55,24 @@ class Product extends Model
         return $this->hasMany(OrderLine::class);
     }
 
+    public function stocks()
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
+    public function mainStock()
+    {
+        return $this->hasOne(ProductStock::class)
+            ->where('warehouse_location', 'Main Warehouse')
+            ->whereNull('seller_id');
+    }
+
     // Accessors
     public function getImageUrlAttribute()
     {
         $primaryImage = $this->primaryImage;
-        return $primaryImage ? asset('storage/' . $primaryImage->image_path) : asset('images/no-image.png');
+        return $primaryImage ? asset($primaryImage->image_path) : asset('images/no-image.png');
+        // return $primaryImage ? asset('storage/' . $primaryImage->image_path) : asset('images/no-image.png');
     }
 
     public function getFormattedPriceAttribute()
@@ -81,5 +94,44 @@ class Product extends Model
     public function scopeByCategory($query, $categoryId)
     {
         return $query->where('category_id', $categoryId);
+    }
+
+    // Stock Management Methods
+    public function isInStock($quantity = 1, $sellerId = null)
+    {
+        $mainStock = $this->mainStock;
+        if (!$mainStock) {
+            return $this->stock_quantity >= $quantity;
+        }
+        
+        $availableStock = $mainStock->quantity - $mainStock->reserved_quantity;
+        return $availableStock >= $quantity;
+    }
+
+
+    public function getTotalStockAttribute()
+    {
+        return $this->stocks()->sum('quantity');
+    }
+
+    public function reserveStock($quantity, $orderId, $sellerId = null)
+    {
+        $stock = $this->mainStock;
+        
+        if (!$stock) {
+            throw new \Exception("No stock record found for this product");
+        }
+
+        return $stock->reserveStock($quantity, $orderId);
+    }
+
+
+    public function getAvailableStockAttribute()
+    {
+        $mainStock = $this->mainStock;
+        if (!$mainStock) {
+            return $this->stock_quantity; // Fallback to product stock_quantity
+        }
+        return $mainStock->quantity - $mainStock->reserved_quantity;
     }
 }

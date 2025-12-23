@@ -130,6 +130,7 @@
                         <div>
                             <span class="text-xl font-bold">{{ $product->formatted_price }}</span>
                         </div>
+                        @if($product->available_stock > 0)
                         <form action="{{ route('cart.add') }}" method="POST" class="add-to-cart-form">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -141,6 +142,11 @@
                                 Add
                             </button>
                         </form>
+                        @else
+                        <button disabled class="px-3 py-2 bg-gray-300 text-gray-600 rounded-md text-sm font-medium cursor-not-allowed">
+                            Out of Stock
+                        </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -213,28 +219,57 @@ document.querySelectorAll('.add-to-cart-form').forEach(form => {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        const formData = new FormData(this);
+        
         fetch(this.action, {
             method: 'POST',
-            body: new FormData(this),
+            body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 // Show success message
-                alert(data.message);
+                showNotification(data.message || 'Product added to cart!');
                 
-                // Update cart count in header if exists
-                const cartCount = document.querySelector('.cart-count');
-                if (cartCount) {
-                    cartCount.textContent = data.cart_count;
-                }
+                // Update cart count in header
+                updateCartCount();
+            } else {
+                showNotification(data.message || 'Failed to add product', 'error');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred', 'error');
+        });
     });
 });
+
+function showNotification(message, type = 'success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function updateCartCount() {
+    fetch('{{ route("cart.count") }}')
+        .then(response => response.json())
+        .then(data => {
+            document.querySelectorAll('.cart-count').forEach(el => {
+                el.textContent = data.count;
+            });
+        })
+        .catch(error => console.error('Error updating cart count:', error));
+}
 </script>
 @endpush

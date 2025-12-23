@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ config('app.name') }} - @yield('title', 'Premium Electronics')</title>
 
   <!-- Tailwind (kept same as your original file) -->
@@ -207,7 +208,7 @@
         </div>
     </div>
 
-    <!-- Cart Modal -->
+    <!-- Cart Modal (UPDATED WITH PROPER IDs) -->
     <div id="cartModal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-end">
         <div class="modal-content bg-white h-full w-full max-w-md shadow-2xl flex flex-col">
             <!-- Header -->
@@ -220,117 +221,47 @@
                         </svg>
                     </button>
                 </div>
-                <p class="text-sm text-gray-600 mt-1">3 items in cart</p>
+                <p id="cartCountText" class="text-sm text-gray-600 mt-1">0 items in cart</p>
             </div>
 
-            <!-- Cart Items -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-4">
-                <!-- Cart Item 1 -->
-                <div class="flex gap-4 pb-4 border-b">
-                    <div class="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1511385348-a52b4a160dc2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXB0b3AlMjBjb21wdXRlcnxlbnwxfHx8fDE3NjUwMTM1MTN8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="MacBook Pro" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-sm mb-1">MacBook Pro 16-inch M3 Max</h3>
-                        <p class="text-xs text-gray-500 mb-2">Space Gray, 256GB</p>
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center border border-gray-300 rounded">
-                                <button class="px-2 py-1 hover:bg-gray-100">-</button>
-                                <span class="px-3 py-1 text-sm border-x border-gray-300">1</span>
-                                <button class="px-2 py-1 hover:bg-gray-100">+</button>
-                            </div>
-                            <button class="text-red-600 text-xs hover:underline">Remove</button>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold">$2499</p>
-                    </div>
-                </div>
-
-                <!-- Cart Item 2 -->
-                <div class="flex gap-4 pb-4 border-b">
-                    <div class="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aXJlbGVzcyUyMGhlYWRwaG9uZXN8ZW58MXx8fHwxNzY0OTgwNDg0fDA&ixlib=rb-4.1.0&q=80&w=1080" alt="Headphones" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-sm mb-1">Sony WH-1000XM5 Wireless</h3>
-                        <p class="text-xs text-gray-500 mb-2">Black</p>
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center border border-gray-300 rounded">
-                                <button class="px-2 py-1 hover:bg-gray-100">-</button>
-                                <span class="px-3 py-1 text-sm border-x border-gray-300">1</span>
-                                <button class="px-2 py-1 hover:bg-gray-100">+</button>
-                            </div>
-                            <button class="text-red-600 text-xs hover:underline">Remove</button>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold">$349</p>
-                    </div>
-                </div>
-
-                <!-- Cart Item 3 -->
-                <div class="flex gap-4 pb-4 border-b">
-                    <div class="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src="https://images.unsplash.com/photo-1660844817855-3ecc7ef21f12?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydHdhdGNofGVufDF8fHx8MTc2NTAzNzgxM3ww&ixlib=rb-4.1.0&q=80&w=1080" alt="Apple Watch" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-sm mb-1">Apple Watch Series 9 GPS</h3>
-                        <p class="text-xs text-gray-500 mb-2">Midnight, 41mm</p>
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center border border-gray-300 rounded">
-                                <button class="px-2 py-1 hover:bg-gray-100">-</button>
-                                <span class="px-3 py-1 text-sm border-x border-gray-300">1</span>
-                                <button class="px-2 py-1 hover:bg-gray-100">+</button>
-                            </div>
-                            <button class="text-red-600 text-xs hover:underline">Remove</button>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold">$399</p>
-                    </div>
+            <!-- Cart Items Container (DYNAMIC) -->
+            <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- Loading state -->
+                <div class="text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Loading cart...</p>
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="p-6 border-t bg-slate-50">
-                <!-- Coupon Code -->
-                <div class="mb-4">
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="Coupon code" class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent">
-                        <button class="px-4 py-2 border border-slate-900 text-slate-900 rounded-md font-medium hover:bg-slate-900 hover:text-white transition-colors">
-                            Apply
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Summary -->
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Subtotal</span>
-                        <span class="font-medium">$3,247</span>
+                        <span id="cartSubtotal" class="font-medium">$0.00</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Shipping</span>
-                        <span class="font-medium">$25</span>
+                        <span id="cartShipping" class="font-medium">$0.00</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Tax</span>
-                        <span class="font-medium">$260</span>
+                        <span id="cartTax" class="font-medium">$0.00</span>
                     </div>
                     <div class="border-t pt-2 mt-2">
                         <div class="flex justify-between">
                             <span class="font-bold">Total</span>
-                            <span class="font-bold text-xl">$3,532</span>
+                            <span id="cartTotal" class="font-bold text-xl">$0.00</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Checkout Buttons -->
                 <div class="space-y-2">
-                    <button class="w-full px-6 py-3 bg-slate-900 text-white rounded-md font-medium hover:bg-slate-800 transition-colors">
+                    <a href="{{ route('checkout.index') }}" class="block w-full px-6 py-3 bg-slate-900 text-white rounded-md font-medium hover:bg-slate-800 transition-colors text-center">
                         Proceed to Checkout
-                    </button>
+                    </a>
                     <button onclick="closeCartModal()" class="w-full px-6 py-3 bg-white border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition-colors">
                         Continue Shopping
                     </button>
@@ -340,7 +271,7 @@
     </div>
 
 
-  {{-- Compiled JavaScript from index_v3.html (modals, mobile nav, cart logic) --}}
+  {{-- Compiled JavaScript --}}
   <script>
         // Modal Functions
         function openSignInModal() {
@@ -363,16 +294,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        function openCartModal() {
-            document.getElementById('cartModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeCartModal() {
-            document.getElementById('cartModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
         function switchToSignUp() {
             closeSignInModal();
             setTimeout(() => openSignUpModal(), 100);
@@ -384,19 +305,19 @@
         }
 
         // Close modal when clicking outside
-        document.getElementById('signInModal').addEventListener('click', function(e) {
+        document.getElementById('signInModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeSignInModal();
             }
         });
 
-        document.getElementById('signUpModal').addEventListener('click', function(e) {
+        document.getElementById('signUpModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeSignUpModal();
             }
         });
 
-        document.getElementById('cartModal').addEventListener('click', function(e) {
+        document.getElementById('cartModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeCartModal();
             }
@@ -413,122 +334,292 @@
 
         // Image gallery functionality
         function changeImage(thumbnail, imageUrl) {
-            document.getElementById('mainImage').src = imageUrl;
-            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-            thumbnail.classList.add('active');
+            const mainImage = document.getElementById('mainImage');
+            if (mainImage) {
+                mainImage.src = imageUrl;
+                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                thumbnail.classList.add('active');
+            }
         }
 
         // Tab switching functionality
         (function () {
-  // Find existing tab buttons and normalize them to have data-target
-  function normalizeTabButtons() {
-    const btns = document.querySelectorAll('.tab-button');
+          function normalizeTabButtons() {
+            const btns = document.querySelectorAll('.tab-button');
+            btns.forEach(btn => {
+              if (btn.hasAttribute('data-target')) return;
+              const onclick = btn.getAttribute('onclick') || '';
+              const m = onclick.match(/switchTab\(['"]([^'"]+)['"]\)/);
+              if (m) {
+                btn.setAttribute('data-target', m[1]);
+              }
+            });
+          }
 
-    btns.forEach(btn => {
-      // If data-target already set, nothing to do
-      if (btn.hasAttribute('data-target')) return;
+          function showTab(targetId, clickedButton) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
 
-      // If an inline onclick contains switchTab('id') -> extract it and set data-target
-      const onclick = btn.getAttribute('onclick') || '';
-      const m = onclick.match(/switchTab\(['"]([^'"]+)['"]\)/);
-      if (m) {
-        btn.setAttribute('data-target', m[1]);
-      }
-    });
-  }
+            tabContents.forEach(c => c.classList.remove('active'));
+            tabButtons.forEach(b => b.classList.remove('active'));
 
-  // Show a tab by id and mark the clicked button active
-  function showTab(targetId, clickedButton) {
-    const tabContents = document.querySelectorAll('.tab-content');
-    const tabButtons = document.querySelectorAll('.tab-button');
+            const target = document.getElementById(targetId);
+            if (target) target.classList.add('active');
 
-    tabContents.forEach(c => c.classList.remove('active'));
-    tabButtons.forEach(b => b.classList.remove('active'));
+            if (clickedButton) {
+              clickedButton.classList.add('active');
+            } else {
+              const btn = document.querySelector(`.tab-button[data-target="${targetId}"]`);
+              if (btn) btn.classList.add('active');
+            }
+          }
 
-    const target = document.getElementById(targetId);
-    if (target) target.classList.add('active');
+          window.switchTab = function (targetId) {
+            const active = document.activeElement;
+            if (active && active.classList && active.classList.contains('tab-button')) {
+              showTab(targetId, active);
+              return;
+            }
 
-    if (clickedButton) {
-      clickedButton.classList.add('active');
-    } else {
-      // if clickedButton missing, try to find matching button by data-target
-      const btn = document.querySelector(`.tab-button[data-target="${targetId}"]`);
-      if (btn) btn.classList.add('active');
-    }
-  }
+            const byData = document.querySelector(`.tab-button[data-target="${targetId}"]`);
+            if (byData) { showTab(targetId, byData); return; }
 
-  // Called from old inline onclicks: switchTab('description')
-  // We use document.activeElement to guess which button triggered the call.
-  window.switchTab = function (targetId) {
-    // prefer the element that currently has focus (usually the button that was clicked)
-    const active = document.activeElement;
-    if (active && active.classList && active.classList.contains('tab-button')) {
-      showTab(targetId, active);
-      return;
-    }
+            showTab(targetId, null);
+          };
 
-    // fallback: find a .tab-button with matching data-target or with onclick referring to same id
-    const byData = document.querySelector(`.tab-button[data-target="${targetId}"]`);
-    if (byData) { showTab(targetId, byData); return; }
+          document.addEventListener('DOMContentLoaded', function () {
+            normalizeTabButtons();
 
-    // last resort: just show the tab without an active button
-    showTab(targetId, null);
-  };
+            const tabButtons = document.querySelectorAll('.tab-button');
 
-  // Attach event listeners after DOM ready
-  document.addEventListener('DOMContentLoaded', function () {
-    normalizeTabButtons();
+            tabButtons.forEach(btn => {
+              const onclick = btn.getAttribute('onclick') || '';
+              const callsSwitchTab = /switchTab\(/.test(onclick);
 
-    const tabButtons = document.querySelectorAll('.tab-button');
+              if (!callsSwitchTab) {
+                btn.addEventListener('click', function (e) {
+                  const targetId = btn.getAttribute('data-target') || btn.dataset.target;
+                  if (!targetId) return;
+                  showTab(targetId, btn);
+                });
+              } else {
+                btn.addEventListener('click', function () {
+                  const targetId = btn.getAttribute('data-target') || (() => {
+                    const m = (btn.getAttribute('onclick') || '').match(/switchTab\(['"]([^'"]+)['"]\)/);
+                    return m ? m[1] : null;
+                  })();
+                  if (!targetId) return;
+                  setTimeout(() => showTab(targetId, btn), 0);
+                });
+              }
+            });
 
-    tabButtons.forEach(btn => {
-      // If the button has an inline onclick that already calls switchTab, skip adding duplicate click handler.
-      const onclick = btn.getAttribute('onclick') || '';
-      const callsSwitchTab = /switchTab\(/.test(onclick);
+            if (location.hash) {
+              const hashTarget = location.hash.replace('#', '');
+              if (document.getElementById(hashTarget)) {
+                showTab(hashTarget, document.querySelector(`.tab-button[data-target="${hashTarget}"]`));
+              }
+            }
 
-      // Add a safe click handler (idempotent)
-      if (!callsSwitchTab) {
-        btn.addEventListener('click', function (e) {
-          const targetId = btn.getAttribute('data-target') || btn.dataset.target;
-          if (!targetId) return;
-          showTab(targetId, btn);
-        });
-      } else {
-        // For buttons that use inline switchTab(...) we still want to ensure they get 'active' class
-        // when clicked (the global switchTab() uses document.activeElement)
-        btn.addEventListener('click', function () {
-          const targetId = btn.getAttribute('data-target') || (() => {
-            const m = (btn.getAttribute('onclick') || '').match(/switchTab\(['"]([^'"]+)['"]\)/);
-            return m ? m[1] : null;
-          })();
-          if (!targetId) return;
-          // small timeout to let the global switchTab run first (if it exists)
-          setTimeout(() => showTab(targetId, btn), 0);
-        });
-      }
-    });
-
-    // Hash support: open a tab if URL has #id
-    if (location.hash) {
-      const hashTarget = location.hash.replace('#', '');
-      if (document.getElementById(hashTarget)) {
-        showTab(hashTarget, document.querySelector(`.tab-button[data-target="${hashTarget}"]`));
-      }
-    }
-
-    // Activate first tab if none active
-    const anyActiveContent = document.querySelector('.tab-content.active');
-    if (!anyActiveContent) {
-      const firstContent = document.querySelector('.tab-content');
-      if (firstContent) {
-        const firstId = firstContent.id;
-        const firstBtn = document.querySelector(`.tab-button[data-target="${firstId}"]`) || document.querySelector('.tab-button');
-        showTab(firstId, firstBtn);
-      }
-    }
-  });
-})();
+            const anyActiveContent = document.querySelector('.tab-content.active');
+            if (!anyActiveContent) {
+              const firstContent = document.querySelector('.tab-content');
+              if (firstContent) {
+                const firstId = firstContent.id;
+                const firstBtn = document.querySelector(`.tab-button[data-target="${firstId}"]`) || document.querySelector('.tab-button');
+                showTab(firstId, firstBtn);
+              }
+            }
+          });
+        })();
     </script>
+
+  {{-- Cart Modal JavaScript (FIXED) --}}
+  <script>
+    let cartData = null;
+
+    async function openCartModal() {
+        try {
+            // Show modal first
+            document.getElementById('cartModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Fetch cart data with correct route
+            const response = await fetch('{{ route("cart.index") }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load cart');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                cartData = data;
+                renderCartModal(data);
+            }
+        } catch (error) {
+            console.error('Error loading cart:', error);
+            const cartItems = document.getElementById('cartItems');
+            if (cartItems) {
+                cartItems.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-600 mb-4">Failed to load cart</p>
+                        <button onclick="closeCartModal()" class="px-6 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800">
+                            Close
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function closeCartModal() {
+        document.getElementById('cartModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function renderCartModal(data) {
+        const cartItemsContainer = document.getElementById('cartItems');
+        const cartCount = document.getElementById('cartCountText');
+        const subtotalEl = document.getElementById('cartSubtotal');
+        const shippingEl = document.getElementById('cartShipping');
+        const taxEl = document.getElementById('cartTax');
+        const totalEl = document.getElementById('cartTotal');
+        
+        if (!cartItemsContainer || !cartCount || !subtotalEl) {
+            console.error('Cart modal elements not found');
+            return;
+        }
+        
+        // Update count
+        cartCount.textContent = `${data.total_items || 0} items in cart`;
+        
+        // Update items
+        if (!data.items || data.items.length === 0) {
+            cartItemsContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <p class="text-gray-600 mb-4">Your cart is empty</p>
+                    <button onclick="closeCartModal()" class="px-6 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800">
+                        Continue Shopping
+                    </button>
+                </div>
+            `;
+        } else {
+            cartItemsContainer.innerHTML = data.items.map(item => `
+                <div class="flex gap-4 pb-4 border-b">
+                    <div class="w-24 h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="${item.image || '/images/placeholder.png'}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='/images/placeholder.png'">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-sm mb-1 line-clamp-2">${item.name}</h3>
+                        <p class="text-sm text-gray-600 mb-2">$${item.price} each</p>
+                        <div class="flex items-center gap-3 mt-2">
+                            <div class="flex items-center border border-gray-300 rounded">
+                                <button onclick="updateCartQuantity(${item.product_id}, ${item.quantity - 1})" class="px-2 py-1 hover:bg-gray-100 ${item.quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}">-</button>
+                                <span class="px-3 py-1 text-sm border-x border-gray-300">${item.quantity}</span>
+                                <button onclick="updateCartQuantity(${item.product_id}, ${item.quantity + 1})" class="px-2 py-1 hover:bg-gray-100">+</button>
+                            </div>
+                            <button onclick="removeFromCart(${item.product_id})" class="text-red-600 text-xs hover:underline">Remove</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold">$${item.total}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Update totals
+        subtotalEl.textContent = `$${data.subtotal}`;
+        shippingEl.textContent = `$${data.shipping}`;
+        taxEl.textContent = `$${data.tax}`;
+        totalEl.textContent = `$${data.total}`;
+    }
+
+    async function updateCartQuantity(productId, newQuantity) {
+        if (newQuantity < 1) {
+            removeFromCart(productId);
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/cart/update/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ quantity: newQuantity })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                openCartModal();
+                updateCartCount();
+            } else {
+                alert(data.message || 'Failed to update cart');
+            }
+        } catch (error) {
+            console.error('Error updating cart:', error);
+            alert('Failed to update cart');
+        }
+    }
+
+    async function removeFromCart(productId) {
+        if (!confirm('Remove this item from cart?')) return;
+        
+        try {
+            const response = await fetch(`/cart/remove/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                openCartModal();
+                updateCartCount();
+            }
+        } catch (error) {
+            console.error('Error removing item:', error);
+        }
+    }
+
+    async function updateCartCount() {
+        try {
+            const response = await fetch('{{ route("cart.count") }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            document.querySelectorAll('.cart-count').forEach(el => {
+                el.textContent = data.count || 0;
+            });
+        } catch (error) {
+            console.error('Error updating cart count:', error);
+        }
+    }
+
+    // Initialize cart count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartCount();
+    });
+  </script>
 
   @stack('scripts')
 </body>

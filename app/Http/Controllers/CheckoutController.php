@@ -29,8 +29,8 @@ class CheckoutController extends Controller
         // Load cart items with product details
         $cart->load(['items.product.primaryImage']);
 
-        // Get user's saved addresses
-        $addresses = auth()->user()->addresses ?? collect();
+        // Get user's saved addresses (if authenticated)
+        $addresses = auth()->check() ? (auth()->user()->addresses ?? collect()) : collect();
         $defaultAddress = $addresses->where('is_default', true)->first();
 
         // Calculate totals
@@ -63,6 +63,10 @@ class CheckoutController extends Controller
             'shipping_address' => 'required_without:shipping_address_id|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'save_addresses' => 'nullable|boolean',
+            // Guest user fields
+            'guest_name' => 'required_without:user_id|string|max:200',
+            'guest_email' => 'required_without:user_id|email|max:255',
+            'guest_phone' => 'nullable|string|max:50',
         ]);
 
         $cart = $this->getCart();
@@ -91,20 +95,24 @@ class CheckoutController extends Controller
             $tax = $this->calculateTax($subtotal);
             $total = $subtotal + $shippingFee + $tax;
 
+            // Create or get user
+            $userId = auth()->check() ? auth()->id() : $this->createGuestUser($validated);
+
             // Create order
             $order = Order::create([
-                'user_id' => auth()->id(),
+                'user_id' => $userId,
                 'order_date' => now(),
                 'billing_address' => $billingAddress,
                 'shipping_address' => $shippingAddress,
                 'total_amount' => $total,
                 'order_status_id' => OrderStatus::getPendingId(),
                 'payment_method' => $validated['payment_method'],
-                'is_paid' => $validated['payment_method'] === 'card' ? false : false, // Will be updated after payment
+                'is_paid' => false, // Will be updated after payment confirmation
             ]);
 
-            // Create order lines and update stock
+            // Create order lines and reserve stock
             foreach ($cart->items as $item) {
+                // Create order line
                 $order->lines()->create([
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
@@ -112,12 +120,26 @@ class CheckoutController extends Controller
                     'line_total' => $item->total
                 ]);
 
-                // Decrease stock
+                // Reserve stock (don't remove yet, just reserve)
                 $product = Product::find($item->product_id);
-                $product->decrement('stock_quantity', $item->quantity);
+                
+                try {
+                    // Reserve stock - it will be deducted when payment is confirmed
+                    $product->reserveStock(
+                        $item->quantity,
+                        $order->id,
+                        null // seller_id if needed in marketplace
+                    );
+                    
+                    Log::info("Stock reserved for product {$product->id}: {$item->quantity} units for order {$order->id}");
+                    
+                } catch (\Exception $e) {
+                    // If reservation fails, rollback everything
+                    throw new \Exception("Failed to reserve stock for {$product->name}: " . $e->getMessage());
+                }
             }
 
-            // Save addresses if requested
+            // Save addresses if requested (only for authenticated users)
             if ($request->save_addresses && auth()->check()) {
                 $this->saveUserAddresses($validated);
             }
@@ -135,9 +157,32 @@ class CheckoutController extends Controller
             Log::error('Checkout error: ' . $e->getMessage());
             
             return back()
-                ->with('error', 'An error occurred while processing your order. Please try again.')
+                ->with('error', $e->getMessage())
                 ->withInput();
         }
+    }
+
+    /**
+     * Create a guest user account
+     */
+    protected function createGuestUser(array $validated)
+    {
+        // Check if guest email already exists
+        $user = User::where('email', $validated['guest_email'])->first();
+        
+        if ($user) {
+            return $user->id;
+        }
+
+        // Create new guest user
+        $user = User::create([
+            'name' => $validated['guest_name'],
+            'email' => $validated['guest_email'],
+            'password' => Hash::make(Str::random(32)), // Random password
+            'email_verified_at' => null // Guest users are not verified
+        ]);
+
+        return $user->id;
     }
 
     /**
@@ -173,10 +218,12 @@ class CheckoutController extends Controller
                 ];
             }
 
-            if ($product->stock_quantity < $item->quantity) {
+            // Check available stock (using ProductStock model)
+            if (!$product->isInStock($item->quantity)) {
+                $availableStock = $product->available_stock;
                 return [
                     'valid' => false,
-                    'message' => "Insufficient stock for '{$product->name}'. Only {$product->stock_quantity} available."
+                    'message' => "Insufficient stock for '{$product->name}'. Only {$availableStock} available."
                 ];
             }
         }

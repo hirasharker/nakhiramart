@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->integer('quantity')->default(1);
+            $table->decimal('price', 10, 2); // Price at time of adding to cart
             $table->timestamps();
+
+            // Prevent duplicate products in same cart
+            $table->unique(['cart_id', 'product_id']);
         });
     }
 

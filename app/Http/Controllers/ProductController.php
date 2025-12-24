@@ -25,6 +25,8 @@ class ProductController extends Controller
         if ($request->has('category') && $request->category) {
             $query->byCategory($request->category);
         }
+
+        $categories = Category::get();
         
         // Sort
         $sort = $request->get('sort', 'newest');
@@ -46,7 +48,7 @@ class ProductController extends Controller
         
         $products = $query->paginate(12);
         
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'categories'));
     }
 
     /**
